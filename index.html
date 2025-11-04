@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏王卡片检索系统</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .search-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .filter-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .filter-options {
+            display: none;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: var(--light-color);
+            border-radius: 4px;
+        }
+        
+        .filter-option {
+            padding: 5px 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .filter-option.selected {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .type-category {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .type-category-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .type-subcategory {
+            margin-left: 15px;
+            margin-bottom: 8px;
+        }
+        
+        .type-subcategory-title {
+            font-style: italic;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .search-conditions {
+            margin-bottom: 20px;
+        }
+        
+        .condition-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .condition-operator {
+            width: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        .condition-type {
+            width: 130px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        .condition-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d68910;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-external {
+            background-color: #8e44ad;
+            color: white;
+            margin-top: 15px;
+        }
+        
+        .btn-external:hover {
+            background-color: #7d3c98;
+        }
+        
+        .results-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .results-count {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .cards-per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .cards-per-page select {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .card-item {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .card-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: var(--secondary-color);
+        }
+        
+        .card-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .card-type {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .external-link {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            text-decoration: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .external-link:hover {
+            opacity: 1;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            min-width: 40px;
+        }
+        
+        .pagination button.active {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination-ellipsis {
+            padding: 8px 5px;
+            color: #666;
+        }
+        
+        .fuzzy-results-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #ddd;
+        }
+        
+        .fuzzy-results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .fuzzy-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .fuzzy-card-item {
+            background-color: #fff9e6;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .fuzzy-card-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: var(--warning-color);
+        }
+        
+        .fuzzy-relevance {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: var(--warning-color);
+            color: white;
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .card-detail {
+            margin-top: 20px;
+        }
+        
+        .card-detail-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .card-detail-label {
+            font-weight: bold;
+            width: 120px;
+            flex-shrink: 0;
+        }
+        
+        .card-detail-value {
+            flex: 1;
+        }
+        
+        .card-image {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .stat-filter {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .stat-input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .stat-label {
+            font-weight: bold;
+            width: 100px;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-section {
+                flex-direction: column;
+            }
+            
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .fuzzy-cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .fuzzy-results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .condition-row {
+                flex-wrap: wrap;
+            }
+            
+            .condition-operator,
+            .condition-type {
+                width: calc(50% - 5px);
+            }
+            
+            .condition-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>游戏王卡片检索系统</h1>
+            <p>快速查找您需要的游戏王卡片</p>
+        </header>
+        
+        <section class="search-section">
+            <h2>筛选条件</h2>
+            <div class="filter-section">
+                <div class="filter-group">
+                    <div class="filter-title">
+                        <span>种族</span>
+                        <span>+</span>
+                    </div>
+                    <div class="filter-options" id="race-options">
+                        <!-- 种族选项将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <div class="filter-title">
+                        <span>属性</span>
+                        <span>+</span>
+                    </div>
+                    <div class="filter-options" id="attribute-options">
+                        <!-- 属性选项将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <div class="filter-title">
+                        <span>卡片类型</span>
+                        <span>+</span>
+                    </div>
+                    <div class="filter-options" id="type-options">
+                        <!-- 卡片类型选项将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <div class="filter-title">
+                        <span>等级</span>
+                        <span>+</span>
+                    </div>
+                    <div class="filter-options" id="level-options">
+                        <!-- 等级选项将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <div class="filter-title">
+                        <span>攻击力/守备力</span>
+                        <span>+</span>
+                    </div>
+                    <div class="filter-options" id="stat-options">
+                        <div class="stat-filter">
+                            <div class="stat-label">攻击力:</div>
+                            <input type="number" class="stat-input" id="atk-min" placeholder="最小值" min="0" max="5000">
+                            <span>-</span>
+                            <input type="number" class="stat-input" id="atk-max" placeholder="最大值" min="0" max="5000">
+                        </div>
+                        <div class="stat-filter">
+                            <div class="stat-label">守备力:</div>
+                            <input type="number" class="stat-input" id="def-min" placeholder="最小值" min="0" max="5000">
+                            <span>-</span>
+                            <input type="number" class="stat-input" id="def-max" placeholder="最大值" min="0" max="5000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h2>搜索条件</h2>
+            <div class="search-conditions" id="search-conditions">
+                <div class="condition-row">
+                    <select class="condition-operator">
+                        <option value="include">包含</option>
+                        <option value="exclude">不包含</option>
+                    </select>
+                    <select class="condition-type">
+                        <option value="both">卡名和效果</option>
+                        <option value="name">仅卡名</option>
+                        <option value="effect">仅效果</option>
+                    </select>
+                    <input type="text" class="condition-input" placeholder="输入搜索关键词">
+                    <button class="btn btn-danger btn-small remove-condition">-</button>
+                </div>
+            </div>
+            
+            <div class="condition-row">
+                <button class="btn btn-success" id="add-condition">+ 添加条件</button>
+                <button class="btn btn-primary" id="search-btn">搜索卡片</button>
+            </div>
+        </section>
+        
+        <section class="results-section" id="results-section" style="display: none;">
+            <div class="results-header">
+                <h2>搜索结果</h2>
+                <div class="results-count" id="results-count">找到 0 张卡片</div>
+                <div class="cards-per-page">
+                    <span>每页显示：</span>
+                    <select id="cards-per-page">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="cards-grid" id="cards-grid">
+                <!-- 卡片将通过JavaScript动态生成 -->
+            </div>
+            
+            <div class="pagination" id="pagination">
+                <!-- 分页将通过JavaScript动态生成 -->
+            </div>
+            
+            <!-- 模糊检索结果按钮 -->
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-warning" id="fuzzy-search-btn" style="display: none;">模糊检索结果</button>
+            </div>
+            
+            <!-- 模糊检索结果区域 -->
+            <div class="fuzzy-results-section" id="fuzzy-results-section" style="display: none;">
+                <div class="fuzzy-results-header">
+                    <h2>模糊检索结果</h2>
+                    <div class="results-count" id="fuzzy-results-count">找到 0 张相关卡片</div>
+                </div>
+                
+                <div class="fuzzy-cards-grid" id="fuzzy-cards-grid">
+                    <!-- 模糊检索结果卡片将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <div class="modal" id="card-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="modal-card-name">卡片名称</h2>
+            <div class="card-detail" id="card-detail">
+                <!-- 卡片详情将通过JavaScript动态生成 -->
+            </div>
+            <button class="btn btn-external" id="external-link-btn">在YGOCDB中查看</button>
+        </div>
+    </div>
+
+    <script>
+        // 卡片数据库
+        let cardsData = {};
+        
+        // 当前搜索结果
+        let searchResults = [];
+        
+        // 模糊搜索结果
+        let fuzzySearchResults = [];
+        
+        // 当前页码
+        let currentPage = 1;
+        
+        // 每页显示的卡片数量
+        let cardsPerPage = 20;
+        
+        // 筛选条件
+        let selectedRaces = [];
+        let selectedAttributes = [];
+        let selectedTypes = []; // 现在存储的是类型代码数组
+        let selectedLevels = [];
+        let atkRange = { min: 0, max: 5000 };
+        let defRange = { min: 0, max: 5000 };
+        
+        // 当前查看的卡片（用于外部链接）
+        let currentCard = null;
+        
+        // 种族映射
+        const raceMap = {
+            1: "战士",
+            2: "魔法师",
+            4: "天使",
+            8: "恶魔",
+            16: "不死",
+            32: "机械",
+            64: "水",
+            128: "炎",
+            256: "岩石",
+            512: "鸟兽",
+            1024: "植物",
+            2048: "昆虫",
+            4096: "雷",
+            8192: "龙",
+            16384: "兽",
+            32768: "兽战士",
+            65536: "恐龙",
+            131072: "鱼",
+            262144: "海龙",
+            524288: "爬虫类",
+            1048576: "念动力",
+            2097152: "幻神兽",
+            4194304: "创造神",
+            8388608: "幻龙",
+            16777216: "电子界",
+            33554432: "幻想魔"
+        };
+        
+        // 属性映射
+        const attributeMap = {
+            1: "地",
+            2: "水",
+            4: "炎",
+            8: "风",
+            16: "光",
+            32: "暗",
+            64: "神"
+        };
+        
+        // 卡片类型映射
+        const typeMap = {
+            0: "",
+            2: "魔法",
+            4: "陷阱",
+            17: "怪兽|通常",
+            33: "怪兽|效果",
+            65: "怪兽|融合",
+            97: "怪兽|效果|融合",
+            129: "怪兽|仪式",
+            130: "魔法|仪式",
+            161: "怪兽|效果|仪式",
+            545: "怪兽|效果|灵魂",
+            673: "怪兽|效果|仪式|灵魂",
+            1057: "怪兽|效果|同盟",
+            2081: "怪兽|效果|二重",
+            4113: "怪兽|通常|调整",
+            4129: "怪兽|效果|调整",
+            4161: "怪兽|融合|调整",
+            5153: "怪兽|效果|同盟|调整",
+            8193: "怪兽|同调",
+            8225: "怪兽|效果|同调",
+            12321: "怪兽|效果|调整|同调",
+            65538: "魔法|速攻",
+            131074: "魔法|永续",
+            131076: "陷阱|永续",
+            262146: "魔法|装备",
+            524290: "魔法|场地",
+            1048580: "陷阱|反击",
+            2101281: "怪兽|效果|调整|反转",
+            4194337: "怪兽|效果|卡通",
+            8388609: "怪兽|超量",
+            8388641: "怪兽|效果|超量",
+            16777233: "怪兽|通常|灵摆",
+            16777249: "怪兽|效果|灵摆",
+            16777313: "怪兽|效果|融合|灵摆",
+            16777761: "怪兽|效果|灵魂|灵摆",
+            16781329: "怪兽|通常|调整|灵摆",
+            16781345: "怪兽|效果|调整|灵摆",
+            16785441: "怪兽|效果|同调|灵摆",
+            18874401: "怪兽|效果|反转|灵摆",
+            25165857: "怪兽|效果|超量|灵摆",
+            33554465: "怪兽|效果|特殊召唤",
+            33554977: "怪兽|效果|灵魂|特殊召唤",
+            33558561: "怪兽|效果|调整|特殊召唤",
+            37748769: "怪兽|效果|卡通|特殊召唤",
+            50331681: "怪兽|效果|灵摆|特殊召唤",
+            67108865: "怪兽|连接",
+            67108897: "怪兽|效果|连接"
+        };
+        
+        // 优化的卡片类型分类结构
+        const typeCategories = {
+            "怪兽": {
+                "通常": [17],
+                "效果": [33],
+                "融合": [65, 97],
+                "仪式": [129, 161],
+                "同调": [8193, 8225, 12321],
+                "超量": [8388609, 8388641],
+                "灵摆": [16777233, 16777249, 16777313, 16777761, 16781329, 16781345, 16785441, 18874401, 25165857, 50331681],
+                "连接": [67108865, 67108897],
+                "特殊召唤": [33554465, 33554977, 33558561, 37748769],
+                "调整": [4113, 4129, 4161, 5153, 2101281],
+                "灵魂": [545, 673, 33554977],
+                "同盟": [1057, 5153],
+                "二重": [2081],
+                "卡通": [4194337, 37748769],
+                "反转": [2101281, 18874401]
+            },
+            "魔法": {
+                "通常": [2],
+                "速攻": [65538],
+                "永续": [131074],
+                "装备": [262146],
+                "场地": [524290],
+                "仪式": [130]
+            },
+            "陷阱": {
+                "通常": [4],
+                "永续": [131076],
+                "反击": [1048580]
+            }
+        };
+        
+        // 初始化函数
+        function init() {
+            // 加载卡片数据
+            fetch('cards.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应不正常');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    cardsData = data;
+                    populateFilterOptions();
+                    setupEventListeners();
+                })
+                .catch(error => {
+                    console.error('加载卡片数据失败:', error);
+                    // 使用示例数据作为备用
+                    cardsData = {
+                        "4007": {
+                            "cid": 4007,
+                            "id": 89631139,
+                            "cn_name": "青眼白龙",
+                            "sc_name": "青眼白龙",
+                            "md_name": "青眼白龙",
+                            "nwbbs_n": "青眼白龙",
+                            "cnocg_n": "蓝眼白龙",
+                            "jp_ruby": "ブルーアイズ・ホワイト・ドラゴン",
+                            "jp_name": "青眼の白龍",
+                            "en_name": "Blue-Eyes White Dragon",
+                            "text": {
+                                "types": "[怪兽|通常] 龙/光\n[★8] 3000/2500",
+                                "pdesc": "",
+                                "desc": "以高攻击力著称的传说之龙。任何对手都能粉碎，其破坏力不可估量。"
+                            },
+                            "data": {
+                                "ot": 11,
+                                "setcode": 221,
+                                "type": 17,
+                                "atk": 3000,
+                                "def": 2500,
+                                "level": 8,
+                                "race": 8192,
+                                "attribute": 16
+                            }
+                        },
+                        "10374": {
+                            "cid": 10374,
+                            "id": 19310321,
+                            "cn_name": "纹章兽 双头鹰",
+                            "sc_name": "纹章兽 双头鹰",
+                            "md_name": "纹章兽 双头鹰",
+                            "nwbbs_n": "纹章兽 双头鹰",
+                            "cnocg_n": "纹章兽 双头鹰",
+                            "jp_ruby": "もんしょうじゅうツインヘッド・イーグル",
+                            "jp_name": "紋章獣ツインヘッド・イーグル",
+                            "en_name": "Heraldic Beast Twin-Headed Eagle",
+                            "text": {
+                                "types": "[怪兽|效果] 鸟兽/风\n[★4] 1200/1400",
+                                "pdesc": "",
+                                "desc": "把墓地的这张卡从游戏中除外，选择自己场上1只没有超量素材的超量怪兽和自己墓地2只名字带有「纹章兽」的怪兽才能发动。选择的墓地的怪兽在选择的超量怪兽下面重叠作为超量素材。「纹章兽 双头鹰」的效果1回合只能使用1次。"
+                            },
+                            "data": {
+                                "ot": 11,
+                                "setcode": 118,
+                                "type": 33,
+                                "atk": 1200,
+                                "def": 1400,
+                                "level": 4,
+                                "race": 512,
+                                "attribute": 8
+                            }
+                        },
+                        "10375": {
+                            "cid": 10375,
+                            "id": 45705025,
+                            "cn_name": "纹章兽 独角兽",
+                            "sc_name": "纹章兽 独角兽",
+                            "md_name": "纹章兽 独角兽",
+                            "nwbbs_n": "纹章兽 独角兽",
+                            "cnocg_n": "纹章兽 独角兽",
+                            "jp_ruby": "もんしょうじゅうユニコーン",
+                            "jp_name": "紋章獣ユニコーン",
+                            "en_name": "Heraldic Beast Unicorn",
+                            "text": {
+                                "types": "[怪兽|效果] 兽/光\n[★4] 1100/1600",
+                                "pdesc": "",
+                                "desc": "把墓地的这张卡从游戏中除外，选择自己墓地1只念动力族超量怪兽才能发动。选择的怪兽特殊召唤。这个效果特殊召唤的怪兽的效果无效化。「纹章兽 独角兽」的效果1回合只能使用1次。"
+                            },
+                            "data": {
+                                "ot": 11,
+                                "setcode": 118,
+                                "type": 33,
+                                "atk": 1100,
+                                "def": 1600,
+                                "level": 4,
+                                "race": 16384,
+                                "attribute": 16
+                            }
+                        }
+                    };
+                    populateFilterOptions();
+                    setupEventListeners();
+                });
+        }
+        
+        // 填充筛选选项
+        function populateFilterOptions() {
+            // 种族选项
+            const raceOptions = document.getElementById('race-options');
+            for (const [key, value] of Object.entries(raceMap)) {
+                const option = document.createElement('div');
+                option.className = 'filter-option';
+                option.dataset.value = key;
+                option.textContent = value;
+                raceOptions.appendChild(option);
+            }
+            
+            // 属性选项
+            const attributeOptions = document.getElementById('attribute-options');
+            for (const [key, value] of Object.entries(attributeMap)) {
+                const option = document.createElement('div');
+                option.className = 'filter-option';
+                option.dataset.value = key;
+                option.textContent = value;
+                attributeOptions.appendChild(option);
+            }
+            
+            // 卡片类型选项 - 使用新的分类结构
+            const typeOptions = document.getElementById('type-options');
+            
+            // 创建大类选项
+            for (const [mainType, subTypes] of Object.entries(typeCategories)) {
+                const mainCategory = document.createElement('div');
+                mainCategory.className = 'type-category';
+                
+                const mainTitle = document.createElement('div');
+                mainTitle.className = 'type-category-title';
+                mainTitle.textContent = mainType;
+                mainCategory.appendChild(mainTitle);
+                
+                // 为每个子类型创建选项
+                for (const [subType, typeCodes] of Object.entries(subTypes)) {
+                    const subCategory = document.createElement('div');
+                    subCategory.className = 'type-subcategory';
+                    
+                    const subTitle = document.createElement('div');
+                    subTitle.className = 'type-subcategory-title';
+                    subTitle.textContent = subType;
+                    subCategory.appendChild(subTitle);
+                    
+                    // 创建子类型选项
+                    const option = document.createElement('div');
+                    option.className = 'filter-option';
+                    option.dataset.mainType = mainType;
+                    option.dataset.subType = subType;
+                    option.dataset.typeCodes = typeCodes.join(',');
+                    option.textContent = `${mainType} - ${subType}`;
+                    subCategory.appendChild(option);
+                    
+                    mainCategory.appendChild(subCategory);
+                }
+                
+                typeOptions.appendChild(mainCategory);
+            }
+            
+            // 等级选项
+            const levelOptions = document.getElementById('level-options');
+            for (let i = 1; i <= 13; i++) {
+                const option = document.createElement('div');
+                option.className = 'filter-option';
+                option.dataset.value = i;
+                option.textContent = i;
+                levelOptions.appendChild(option);
+            }
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 筛选条件展开/收起
+            document.querySelectorAll('.filter-title').forEach(title => {
+                title.addEventListener('click', function() {
+                    const options = this.nextElementSibling;
+                    const isExpanded = options.style.display === 'flex';
+                    
+                    // 切换所有筛选选项的显示状态
+                    document.querySelectorAll('.filter-options').forEach(opt => {
+                        opt.style.display = 'none';
+                    });
+                    
+                    // 切换当前选项的显示状态
+                    options.style.display = isExpanded ? 'none' : 'flex';
+                    
+                    // 更新展开/收起图标
+                    this.querySelector('span:last-child').textContent = isExpanded ? '+' : '-';
+                });
+            });
+            
+            // 筛选选项选择 - 种族、属性、等级
+            document.querySelectorAll('.filter-option:not([data-type-codes])').forEach(option => {
+                option.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    
+                    const parentId = this.parentElement.id;
+                    const value = this.dataset.value;
+                    
+                    if (parentId === 'race-options') {
+                        if (this.classList.contains('selected')) {
+                            selectedRaces.push(value);
+                        } else {
+                            selectedRaces = selectedRaces.filter(race => race !== value);
+                        }
+                    } else if (parentId === 'attribute-options') {
+                        if (this.classList.contains('selected')) {
+                            selectedAttributes.push(value);
+                        } else {
+                            selectedAttributes = selectedAttributes.filter(attr => attr !== value);
+                        }
+                    } else if (parentId === 'level-options') {
+                        if (this.classList.contains('selected')) {
+                            selectedLevels.push(value);
+                        } else {
+                            selectedLevels = selectedLevels.filter(level => level !== value);
+                        }
+                    }
+                });
+            });
+            
+            // 卡片类型选项选择 - 特殊处理
+            document.querySelectorAll('.filter-option[data-type-codes]').forEach(option => {
+                option.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    
+                    const typeCodes = this.dataset.typeCodes.split(',').map(code => parseInt(code));
+                    
+                    if (this.classList.contains('selected')) {
+                        // 添加选中的类型代码
+                        selectedTypes = [...new Set([...selectedTypes, ...typeCodes])];
+                    } else {
+                        // 移除选中的类型代码
+                        selectedTypes = selectedTypes.filter(code => !typeCodes.includes(code));
+                    }
+                });
+            });
+            
+            // 攻击力/守备力输入框事件
+            document.getElementById('atk-min').addEventListener('input', function() {
+                atkRange.min = this.value ? parseInt(this.value) : 0;
+            });
+            
+            document.getElementById('atk-max').addEventListener('input', function() {
+                atkRange.max = this.value ? parseInt(this.value) : 5000;
+            });
+            
+            document.getElementById('def-min').addEventListener('input', function() {
+                defRange.min = this.value ? parseInt(this.value) : 0;
+            });
+            
+            document.getElementById('def-max').addEventListener('input', function() {
+                defRange.max = this.value ? parseInt(this.value) : 5000;
+            });
+            
+            // 添加搜索条件
+            document.getElementById('add-condition').addEventListener('click', function() {
+                const conditionsContainer = document.getElementById('search-conditions');
+                const newCondition = document.createElement('div');
+                newCondition.className = 'condition-row';
+                newCondition.innerHTML = `
+                    <select class="condition-operator">
+                        <option value="include">包含</option>
+                        <option value="exclude">不包含</option>
+                    </select>
+                    <select class="condition-type">
+                        <option value="both">卡名和效果</option>
+                        <option value="name">仅卡名</option>
+                        <option value="effect">仅效果</option>
+                    </select>
+                    <input type="text" class="condition-input" placeholder="输入搜索关键词">
+                    <button class="btn btn-danger btn-small remove-condition">-</button>
+                `;
+                conditionsContainer.appendChild(newCondition);
+                
+                // 为新添加的删除按钮添加事件监听器
+                newCondition.querySelector('.remove-condition').addEventListener('click', function() {
+                    conditionsContainer.removeChild(newCondition);
+                });
+            });
+            
+            // 删除搜索条件
+            document.querySelectorAll('.remove-condition').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.parentElement.remove();
+                });
+            });
+            
+            // 搜索按钮
+            document.getElementById('search-btn').addEventListener('click', performSearch);
+            
+            // 每页显示卡片数量更改
+            document.getElementById('cards-per-page').addEventListener('change', function() {
+                cardsPerPage = parseInt(this.value);
+                currentPage = 1;
+                displaySearchResults();
+            });
+            
+            // 模糊搜索按钮
+            document.getElementById('fuzzy-search-btn').addEventListener('click', performFuzzySearch);
+            
+            // 关闭模态框
+            document.querySelector('.close-modal').addEventListener('click', function() {
+                document.getElementById('card-modal').style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('card-modal');
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // 外部链接按钮
+            document.getElementById('external-link-btn').addEventListener('click', function() {
+                if (currentCard) {
+                    const ygocdbUrl = `https://ygocdb.com/card/ ${currentCard.id}`;
+                    window.open(ygocdbUrl, '_blank');
+                }
+            });
+        }
+        
+        // 执行搜索
+        function performSearch() {
+            // 获取所有搜索条件
+            const conditions = [];
+            const conditionRows = document.querySelectorAll('.condition-row');
+            
+            conditionRows.forEach(row => {
+                const operatorSelect = row.querySelector('.condition-operator');
+                const typeSelect = row.querySelector('.condition-type');
+                const keywordInput = row.querySelector('.condition-input');
+                
+                // 确保元素存在
+                if (operatorSelect && typeSelect && keywordInput) {
+                    const operator = operatorSelect.value;
+                    const type = typeSelect.value;
+                    const keyword = keywordInput.value.trim();
+                    
+                    if (keyword) {
+                        conditions.push({
+                            operator: operator,
+                            type: type,
+                            keyword: keyword
+                        });
+                    }
+                }
+            });
+            
+            // 应用筛选条件
+            searchResults = Object.values(cardsData).filter(card => {
+                // 安全检查，确保card.data存在
+                if (!card.data) {
+                    return false;
+                }
+                
+                // 检查种族筛选条件
+                if (selectedRaces.length > 0 && !selectedRaces.includes(card.data.race.toString())) {
+                    return false;
+                }
+                
+                // 检查属性筛选条件
+                if (selectedAttributes.length > 0 && !selectedAttributes.includes(card.data.attribute.toString())) {
+                    return false;
+                }
+                
+                // 检查卡片类型筛选条件 - 优化后的逻辑
+                if (selectedTypes.length > 0) {
+                    let typeMatch = false;
+                    
+                    // 检查卡片类型是否匹配任何选中的类型代码
+                    for (const typeCode of selectedTypes) {
+                        if (card.data.type === typeCode) {
+                            typeMatch = true;
+                            break;
+                        }
+                        
+                        // 对于包含关系，检查类型代码是否包含在卡片类型中
+                        // 例如：如果选择了"怪兽|效果"，那么"怪兽|效果|灵摆"也应该匹配
+                        const selectedTypeString = typeMap[typeCode];
+                        const cardTypeString = typeMap[card.data.type];
+                        
+                        if (selectedTypeString && cardTypeString) {
+                            const selectedParts = selectedTypeString.split('|');
+                            const cardParts = cardTypeString.split('|');
+                            
+                            // 检查卡片类型是否包含所有选中的类型部分
+                            const hasAllParts = selectedParts.every(part => 
+                                cardParts.includes(part)
+                            );
+                            
+                            if (hasAllParts) {
+                                typeMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!typeMatch) {
+                        return false;
+                    }
+                }
+                
+                // 检查等级筛选条件
+                if (selectedLevels.length > 0 && !selectedLevels.includes(card.data.level.toString())) {
+                    return false;
+                }
+                
+                // 检查攻击力筛选条件
+                if (card.data.atk < atkRange.min || card.data.atk > atkRange.max) {
+                    return false;
+                }
+                
+                // 检查守备力筛选条件
+                if (card.data.def < defRange.min || card.data.def > defRange.max) {
+                    return false;
+                }
+                
+                // 如果没有文本搜索条件，直接返回通过前置筛选的卡片
+                if (conditions.length === 0) {
+                    return true;
+                }
+                
+                // 有文本搜索条件，则继续检查文本条件
+                for (const condition of conditions) {
+                    let found = false;
+                    
+                    if (condition.type === 'name' || condition.type === 'both') {
+                        // 检查卡名
+                        const nameFields = [
+                            card.cn_name,
+                            card.sc_name,
+                            card.md_name,
+                            card.nwbbs_n,
+                            card.cnocg_n,
+                            card.jp_ruby,
+                            card.jp_name,
+                            card.en_name
+                        ];
+                        
+                        for (const name of nameFields) {
+                            if (name && name.includes(condition.keyword)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!found && (condition.type === 'effect' || condition.type === 'both')) {
+                        // 检查效果
+                        const desc = card.text.desc || '';
+                        const pdesc = card.text.pdesc || '';
+                        
+                        if (desc.includes(condition.keyword) || pdesc.includes(condition.keyword)) {
+                            found = true;
+                        }
+                    }
+                    
+                    // 根据操作符决定是否匹配
+                    if (condition.operator === 'include' && !found) {
+                        return false;
+                    }
+                    if (condition.operator === 'exclude' && found) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // 计算匹配度并排序（仅当有包含条件的文本搜索条件时）
+            if (conditions.length > 0) {
+                searchResults.sort((a, b) => {
+                    let scoreA = 0;
+                    let scoreB = 0;
+                    
+                    for (const condition of conditions) {
+                        // 只对"包含"条件计算匹配度
+                        if (condition.operator !== 'include') continue;
+                        
+                        if (condition.type === 'name' || condition.type === 'both') {
+                            const nameFieldsA = [
+                                a.cn_name,
+                                a.sc_name,
+                                a.md_name,
+                                a.nwbbs_n,
+                                a.cnocg_n,
+                                a.jp_ruby,
+                                a.jp_name,
+                                a.en_name
+                            ];
+                            
+                            const nameFieldsB = [
+                                b.cn_name,
+                                b.sc_name,
+                                b.md_name,
+                                b.nwbbs_n,
+                                b.cnocg_n,
+                                b.jp_ruby,
+                                b.jp_name,
+                                b.en_name
+                            ];
+                            
+                            for (const name of nameFieldsA) {
+                                if (name && name.includes(condition.keyword)) {
+                                    scoreA++;
+                                }
+                            }
+                            
+                            for (const name of nameFieldsB) {
+                                if (name && name.includes(condition.keyword)) {
+                                    scoreB++;
+                                }
+                            }
+                        }
+                        
+                        if (condition.type === 'effect' || condition.type === 'both') {
+                            const descA = a.text.desc || '';
+                            const pdescA = a.text.pdesc || '';
+                            
+                            const descB = b.text.desc || '';
+                            const pdescB = b.text.pdesc || '';
+                            
+                            if (descA.includes(condition.keyword)) scoreA++;
+                            if (pdescA.includes(condition.keyword)) scoreA++;
+                            
+                            if (descB.includes(condition.keyword)) scoreB++;
+                            if (pdescB.includes(condition.keyword)) scoreB++;
+                        }
+                    }
+                    
+                    return scoreB - scoreA;
+                });
+            }
+            
+            // 显示搜索结果
+            currentPage = 1;
+            displaySearchResults();
+            
+            // 如果有关键词搜索条件，显示模糊搜索按钮
+            const hasKeywordConditions = conditions.some(condition => condition.keyword);
+            document.getElementById('fuzzy-search-btn').style.display = hasKeywordConditions ? 'block' : 'none';
+            
+            // 隐藏之前的模糊搜索结果
+            document.getElementById('fuzzy-results-section').style.display = 'none';
+        }
+        
+        // 执行模糊搜索
+        function performFuzzySearch() {
+            // 获取所有搜索条件中的关键词
+            const keywords = [];
+            const conditionRows = document.querySelectorAll('.condition-row');
+            
+            conditionRows.forEach(row => {
+                const operatorSelect = row.querySelector('.condition-operator');
+                const keywordInput = row.querySelector('.condition-input');
+                
+                // 确保元素存在且为包含条件
+                if (operatorSelect && keywordInput && operatorSelect.value === 'include') {
+                    const keyword = keywordInput.value.trim();
+                    if (keyword) {
+                        // 更智能的关键词拆分
+                        const splitKeywords = splitChineseKeywords(keyword);
+                        keywords.push(...splitKeywords);
+                    }
+                }
+            });
+            
+            // 如果没有关键词，直接返回
+            if (keywords.length === 0) {
+                alert('没有可用的搜索关键词');
+                return;
+            }
+            
+            // 构建精确搜索结果的CID集合，用于排除
+            const exactSearchCids = new Set(searchResults.map(card => card.cid));
+            
+            // 按照词元长度从长到短排序
+            const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
+            
+            // 执行模糊搜索
+            fuzzySearchResults = Object.values(cardsData).filter(card => {
+                // 排除已经在精确搜索结果中的卡片
+                if (exactSearchCids.has(card.cid)) {
+                    return false;
+                }
+                
+                // 应用前置筛选条件
+                if (!card.data) {
+                    return false;
+                }
+                
+                // 检查前置筛选条件
+                if (selectedRaces.length > 0 && !selectedRaces.includes(card.data.race.toString())) {
+                    return false;
+                }
+                
+                if (selectedAttributes.length > 0 && !selectedAttributes.includes(card.data.attribute.toString())) {
+                    return false;
+                }
+                
+                if (selectedTypes.length > 0) {
+                    let typeMatch = false;
+                    
+                    // 检查卡片类型是否匹配任何选中的类型代码
+                    for (const typeCode of selectedTypes) {
+                        if (card.data.type === typeCode) {
+                            typeMatch = true;
+                            break;
+                        }
+                        
+                        // 对于包含关系，检查类型代码是否包含在卡片类型中
+                        const selectedTypeString = typeMap[typeCode];
+                        const cardTypeString = typeMap[card.data.type];
+                        
+                        if (selectedTypeString && cardTypeString) {
+                            const selectedParts = selectedTypeString.split('|');
+                            const cardParts = cardTypeString.split('|');
+                            
+                            // 检查卡片类型是否包含所有选中的类型部分
+                            const hasAllParts = selectedParts.every(part => 
+                                cardParts.includes(part)
+                            );
+                            
+                            if (hasAllParts) {
+                                typeMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!typeMatch) {
+                        return false;
+                    }
+                }
+                
+                // 检查等级筛选条件
+                if (selectedLevels.length > 0 && !selectedLevels.includes(card.data.level.toString())) {
+                    return false;
+                }
+                
+                // 检查攻击力筛选条件
+                if (card.data.atk < atkRange.min || card.data.atk > atkRange.max) {
+                    return false;
+                }
+                
+                // 检查守备力筛选条件
+                if (card.data.def < defRange.min || card.data.def > defRange.max) {
+                    return false;
+                }
+                
+                // 检查文本匹配 - 使用多级正则匹配
+                const nameFields = [
+                    card.cn_name,
+                    card.sc_name,
+                    card.md_name,
+                    card.nwbbs_n,
+                    card.cnocg_n,
+                    card.jp_ruby,
+                    card.jp_name,
+                    card.en_name
+                ];
+                
+                const desc = card.text.desc || '';
+                const pdesc = card.text.pdesc || '';
+                
+                // 检查卡名是否匹配
+                const nameMatch = nameFields.some(name => name && multiLevelRegexMatch(name, sortedKeywords));
+                
+                // 检查效果是否匹配
+                const descMatch = multiLevelRegexMatch(desc, sortedKeywords) || multiLevelRegexMatch(pdesc, sortedKeywords);
+                
+                return nameMatch || descMatch;
+            });
+            
+            // 计算相关度并排序 - 使用多级匹配得分
+            fuzzySearchResults.forEach(card => {
+                let relevance = 0;
+                
+                const nameFields = [
+                    card.cn_name,
+                    card.sc_name,
+                    card.md_name,
+                    card.nwbbs_n,
+                    card.cnocg_n,
+                    card.jp_ruby,
+                    card.jp_name,
+                    card.en_name
+                ];
+                
+                const desc = card.text.desc || '';
+                const pdesc = card.text.pdesc || '';
+                
+                // 使用多级匹配计算相关度
+                nameFields.forEach(name => {
+                    if (name) {
+                        relevance += calculateMultiLevelScore(name, sortedKeywords, 'name');
+                    }
+                });
+                
+                [desc, pdesc].forEach(text => {
+                    if (text) {
+                        relevance += calculateMultiLevelScore(text, sortedKeywords, 'effect');
+                    }
+                });
+                
+                // 额外加分：匹配更多关键词
+                const matchedKeywords = sortedKeywords.filter(keyword => {
+                    const nameMatch = nameFields.some(name => name && name.includes(keyword));
+                    const descMatch = desc.includes(keyword) || pdesc.includes(keyword);
+                    return nameMatch || descMatch;
+                }).length;
+                
+                relevance += matchedKeywords * 10; // 每匹配一个额外关键词加10分
+                
+                card.relevance = relevance;
+            });
+            
+            // 按相关度排序
+            fuzzySearchResults.sort((a, b) => b.relevance - a.relevance);
+            
+            // 显示模糊搜索结果
+            displayFuzzySearchResults();
+        }
+
+        // 多级正则匹配函数
+        function multiLevelRegexMatch(text, keywords) {
+            if (!text) return false;
+            
+            // 按照词元长度从长到短遍历
+            for (const keyword of keywords) {
+                // 构建完全匹配正则
+                const exactRegex = new RegExp(`^${escapeRegex(keyword)}$`, 'i');
+                // 构建开头匹配正则
+                const startRegex = new RegExp(`^${escapeRegex(keyword)}`, 'i');
+                // 构建任意位置匹配正则
+                const anyRegex = new RegExp(escapeRegex(keyword), 'i');
+                
+                // 检查匹配
+                if (exactRegex.test(text) || startRegex.test(text) || anyRegex.test(text)) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        // 多级匹配得分计算函数
+        function calculateMultiLevelScore(text, keywords, type) {
+            let score = 0;
+            
+            // 按照词元长度从长到短遍历
+            for (const keyword of keywords) {
+                const keywordLength = keyword.length;
+                
+                // 构建不同级别的正则表达式
+                const exactRegex = new RegExp(`^${escapeRegex(keyword)}$`, 'i');
+                const startRegex = new RegExp(`^${escapeRegex(keyword)}`, 'i');
+                const anyRegex = new RegExp(escapeRegex(keyword), 'i');
+                
+                // 检查完全匹配 - 最高权重
+                if (exactRegex.test(text)) {
+                    // 完全匹配得分远高于其他情况
+                    score += 100 * keywordLength;
+                    continue; // 完全匹配后不再检查其他匹配方式
+                }
+                
+                // 检查开头匹配 - 中等权重
+                if (startRegex.test(text)) {
+                    score += 30 * keywordLength;
+                    continue; // 开头匹配后不再检查任意位置匹配
+                }
+                
+                // 检查任意位置匹配 - 基础权重
+                if (anyRegex.test(text)) {
+                    const matches = text.match(new RegExp(escapeRegex(keyword), 'gi')) || [];
+                    score += 10 * keywordLength * matches.length;
+                }
+            }
+            
+            // 根据匹配类型调整权重
+            if (type === 'name') {
+                score *= 1.2; // 卡名匹配额外加成
+            }
+            
+            return score;
+        }
+
+        // 正则表达式转义函数
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 智能中文关键词拆分函数
+        function splitChineseKeywords(text) {
+            const keywords = [];
+            
+            // 1. 首先按空格拆分
+            if (text.includes(' ')) {
+                return text.split(/\s+/);
+            }
+            
+            // 2. 尝试按中文标点符号拆分
+            const separators = ['，', '。', '？', '！', '；', '、', '：'];
+            for (let sep of separators) {
+                if (text.includes(sep)) {
+                    return text.split(sep).filter(k => k.length > 0);
+                }
+            }
+            
+            // 3. 对连续中文文本进行智能拆分
+            if (text.length >= 4) {
+                // 方法1：按固定长度滑动窗口（2-4个字符）
+                for (let len = 4; len >= 2; len--) {
+                    for (let i = 0; i <= text.length - len; i++) {
+                        keywords.push(text.substring(i, i + len));
+                    }
+                }
+                
+                // 方法2：保留完整关键词
+                keywords.push(text);
+                
+                // 方法3：添加单字关键词（作为最后手段）
+                if (keywords.length < 3) { // 如果其他方法没产生足够关键词
+                    for (let i = 0; i < text.length; i++) {
+                        keywords.push(text[i]);
+                    }
+                }
+            } else {
+                // 短文本直接作为关键词
+                keywords.push(text);
+            }
+            
+            return [...new Set(keywords)]; // 去重
+        }
+        
+        // 显示模糊搜索结果
+        function displayFuzzySearchResults() {
+            const fuzzyResultsSection = document.getElementById('fuzzy-results-section');
+            const fuzzyResultsCount = document.getElementById('fuzzy-results-count');
+            const fuzzyCardsGrid = document.getElementById('fuzzy-cards-grid');
+            
+            // 更新结果数量
+            fuzzyResultsCount.textContent = `找到 ${fuzzySearchResults.length} 张补充卡片`;
+            
+            // 显示结果区域
+            fuzzyResultsSection.style.display = 'block';
+            
+            // 清空卡片网格
+            fuzzyCardsGrid.innerHTML = '';
+            
+            // 显示模糊搜索结果的卡片
+            fuzzySearchResults.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'fuzzy-card-item';
+                
+                // 改进：显示更直观的相关度信息
+                let relevanceText = '';
+                if (card.relevance >= 50) {
+                    relevanceText = '高度相关';
+                } else if (card.relevance >= 20) {
+                    relevanceText = '相关';
+                } else {
+                    relevanceText = '低相关';
+                }
+                
+                cardElement.innerHTML = `
+                    <div class="fuzzy-relevance">${relevanceText} (${card.relevance}分)</div>
+                    <a href="https://ygocdb.com/card/ ${card.id}" class="external-link" target="_blank" title="在YGOCDB中查看">🔗</a>
+                    <div class="card-name">${card.cn_name}</div>
+                    <div class="card-type">${card.text.types.split('\n')[0]}</div>
+                `;
+                
+                cardElement.addEventListener('click', function() {
+                    showCardDetail(card);
+                });
+                
+                fuzzyCardsGrid.appendChild(cardElement);
+            });
+        }
+        
+        // 显示搜索结果
+        function displaySearchResults() {
+            const resultsSection = document.getElementById('results-section');
+            const resultsCount = document.getElementById('results-count');
+            const cardsGrid = document.getElementById('cards-grid');
+            const pagination = document.getElementById('pagination');
+            
+            // 更新结果数量
+            resultsCount.textContent = `找到 ${searchResults.length} 张卡片`;
+            
+            // 显示结果区域
+            resultsSection.style.display = 'block';
+            
+            // 计算分页
+            const totalPages = Math.ceil(searchResults.length / cardsPerPage);
+            const startIndex = (currentPage - 1) * cardsPerPage;
+            const endIndex = Math.min(startIndex + cardsPerPage, searchResults.length);
+            const currentCards = searchResults.slice(startIndex, endIndex);
+            
+            // 清空卡片网格
+            cardsGrid.innerHTML = '';
+            
+            // 显示当前页的卡片
+            currentCards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-item';
+                cardElement.innerHTML = `
+                    <a href="https://ygocdb.com/card/ ${card.id}" class="external-link" target="_blank" title="在YGOCDB中查看">🔗</a>
+                    <div class="card-name">${card.cn_name}</div>
+                    <div class="card-type">${card.text.types.split('\n')[0]}</div>
+                `;
+                
+                cardElement.addEventListener('click', function() {
+                    showCardDetail(card);
+                });
+                
+                cardsGrid.appendChild(cardElement);
+            });
+            
+            // 生成分页 - 优化显示，只显示当前页附近和最前、最后的页码
+            generatePagination(totalPages, pagination);
+        }
+        
+        // 生成分页 - 优化显示，只显示当前页附近和最前、最后的页码
+        function generatePagination(totalPages, paginationElement) {
+            paginationElement.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // 上一页按钮
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '上一页';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displaySearchResults();
+                }
+            });
+            paginationElement.appendChild(prevButton);
+            
+            // 总是显示第一页
+            const firstPageButton = document.createElement('button');
+            firstPageButton.textContent = '1';
+            firstPageButton.className = currentPage === 1 ? 'active' : '';
+            firstPageButton.addEventListener('click', function() {
+                currentPage = 1;
+                displaySearchResults();
+            });
+            paginationElement.appendChild(firstPageButton);
+            
+            // 计算要显示的页码范围
+            let startPage = Math.max(2, currentPage - 2);
+            let endPage = Math.min(totalPages - 1, currentPage + 2);
+            
+            // 如果当前页接近开头，调整结束页码
+            if (currentPage <= 3) {
+                endPage = Math.min(totalPages - 1, 5);
+            }
+            
+            // 如果当前页接近结尾，调整开始页码
+            if (currentPage >= totalPages - 2) {
+                startPage = Math.max(2, totalPages - 4);
+            }
+            
+            // 如果开始页码不是2，添加省略号
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'pagination-ellipsis';
+                ellipsis.textContent = '...';
+                paginationElement.appendChild(ellipsis);
+            }
+            
+            // 显示中间页码
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.className = i === currentPage ? 'active' : '';
+                pageButton.addEventListener('click', function() {
+                    currentPage = i;
+                    displaySearchResults();
+                });
+                paginationElement.appendChild(pageButton);
+            }
+            
+            // 如果结束页码不是最后一页的前一页，添加省略号
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'pagination-ellipsis';
+                ellipsis.textContent = '...';
+                paginationElement.appendChild(ellipsis);
+            }
+            
+            // 总是显示最后一页（如果总页数大于1）
+            if (totalPages > 1) {
+                const lastPageButton = document.createElement('button');
+                lastPageButton.textContent = totalPages;
+                lastPageButton.className = currentPage === totalPages ? 'active' : '';
+                lastPageButton.addEventListener('click', function() {
+                    currentPage = totalPages;
+                    displaySearchResults();
+                });
+                paginationElement.appendChild(lastPageButton);
+            }
+            
+            // 下一页按钮
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '下一页';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', function() {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displaySearchResults();
+                }
+            });
+            paginationElement.appendChild(nextButton);
+        }
+        
+        // 显示卡片详情
+        function showCardDetail(card) {
+            const modal = document.getElementById('card-modal');
+            const modalCardName = document.getElementById('modal-card-name');
+            const cardDetail = document.getElementById('card-detail');
+            
+            // 保存当前卡片用于外部链接
+            currentCard = card;
+            
+            // 设置卡片名称
+            modalCardName.textContent = card.cn_name;
+            
+            // 构建卡片详情HTML
+            let detailHTML = `
+                <div class="card-detail-row">
+                    <div class="card-detail-label">中文名:</div>
+                    <div class="card-detail-value">${card.cn_name}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">简体中文名:</div>
+                    <div class="card-detail-value">${card.sc_name}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">繁体中文名:</div>
+                    <div class="card-detail-value">${card.md_name}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">NWBBS名:</div>
+                    <div class="card-detail-value">${card.nwbbs_n}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">CNOCG名:</div>
+                    <div class="card-detail-value">${card.cnocg_n}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">日文名:</div>
+                    <div class="card-detail-value">${card.jp_name}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">日文注音:</div>
+                    <div class="card-detail-value">${card.jp_ruby}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">英文名:</div>
+                    <div class="card-detail-value">${card.en_name}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">卡片类型:</div>
+                    <div class="card-detail-value">${card.text.types}</div>
+                </div>
+            `;
+            
+            if (card.text.pdesc) {
+                detailHTML += `
+                    <div class="card-detail-row">
+                        <div class="card-detail-label">怪兽效果:</div>
+                        <div class="card-detail-value">${card.text.pdesc}</div>
+                    </div>
+                `;
+            }
+            
+            detailHTML += `
+                <div class="card-detail-row">
+                    <div class="card-detail-label">卡片描述:</div>
+                    <div class="card-detail-value">${card.text.desc}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">卡片ID:</div>
+                    <div class="card-detail-value">${card.cid}</div>
+                </div>
+                <div class="card-detail-row">
+                    <div class="card-detail-label">密码:</div>
+                    <div class="card-detail-value">${card.id}</div>
+                </div>
+            `;
+            
+            // 安全检查，确保card.data存在
+            if (card.data) {
+                detailHTML += `
+                    <div class="card-detail-row">
+                        <div class="card-detail-label">种族:</div>
+                        <div class="card-detail-value">${raceMap[card.data.race] || card.data.race}</div>
+                    </div>
+                    <div class="card-detail-row">
+                        <div class="card-detail-label">属性:</div>
+                        <div class="card-detail-value">${attributeMap[card.data.attribute] || card.data.attribute}</div>
+                    </div>
+                    <div class="card-detail-row">
+                        <div class="card-detail-label">攻击力:</div>
+                        <div class="card-detail-value">${card.data.atk}</div>
+                    </div>
+                    <div class="card-detail-row">
+                        <div class="card-detail-label">防御力:</div>
+                        <div class="card-detail-value">${card.data.def}</div>
+                    </div>
+                    <div class="card-detail-row">
+                        <div class="card-detail-label">等级:</div>
+                        <div class="card-detail-value">${card.data.level}</div>
+                    </div>
+                `;
+            }
+            
+            cardDetail.innerHTML = detailHTML;
+            
+            // 显示模态框
+            modal.style.display = 'flex';
+        }
+        
+        // 初始化应用
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
