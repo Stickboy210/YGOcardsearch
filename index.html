@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>游戏王卡片检索系统</title>
     <style>
+        /* 之前的样式保持不变 */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -106,29 +107,6 @@
             background-color: var(--secondary-color);
             color: white;
             border-color: var(--secondary-color);
-        }
-        
-        .type-category {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        
-        .type-category-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ccc;
-        }
-        
-        .type-subcategory {
-            margin-left: 15px;
-            margin-bottom: 8px;
-        }
-        
-        .type-subcategory-title {
-            font-style: italic;
-            margin-bottom: 5px;
-            color: #666;
         }
         
         .search-conditions {
@@ -377,17 +355,6 @@
             border-color: var(--warning-color);
         }
         
-        .fuzzy-relevance {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: var(--warning-color);
-            color: white;
-            font-size: 0.8rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-        }
-        
         .modal {
             display: none;
             position: fixed;
@@ -440,13 +407,6 @@
             flex: 1;
         }
         
-        .card-image {
-            max-width: 100%;
-            height: auto;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-        
         .stat-filter {
             display: flex;
             gap: 10px;
@@ -464,6 +424,51 @@
         .stat-label {
             font-weight: bold;
             width: 100px;
+        }
+        
+        /* 层级选择器样式 */
+        .type-selector {
+            margin-bottom: 10px;
+        }
+        
+        .type-level {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .type-level-title {
+            font-weight: bold;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .type-option {
+            padding: 5px 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .type-option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .type-option.selected {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .selected-type-path {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-size: 0.9rem;
         }
         
         @media (max-width: 768px) {
@@ -543,6 +548,12 @@
                     </div>
                     <div class="filter-options" id="type-options">
                         <!-- 卡片类型选项将通过JavaScript动态生成 -->
+                        <div class="type-selector" id="type-selector">
+                            <!-- 层级选择器将通过JavaScript动态生成 -->
+                        </div>
+                        <div class="selected-type-path" id="selected-type-path">
+                            未选择类型
+                        </div>
                     </div>
                 </div>
                 
@@ -673,13 +684,16 @@
         // 筛选条件
         let selectedRaces = [];
         let selectedAttributes = [];
-        let selectedTypes = []; // 现在存储的是类型代码数组
+        let selectedTypes = []; // 存储最终选择的类型代码
         let selectedLevels = [];
         let atkRange = { min: 0, max: 5000 };
         let defRange = { min: 0, max: 5000 };
         
         // 当前查看的卡片（用于外部链接）
         let currentCard = null;
+        
+        // 当前选择的类型路径
+        let currentTypePath = [];
         
         // 种族映射
         const raceMap = {
@@ -773,39 +787,257 @@
             67108897: "怪兽|效果|连接"
         };
         
-        // 优化的卡片类型分类结构
-        const typeCategories = {
+        // 类型层级结构 - 修复版本
+        const typeHierarchy = {
             "怪兽": {
-                "通常": [17],
-                "效果": [33],
-                "融合": [65, 97],
-                "仪式": [129, 161],
-                "同调": [8193, 8225, 12321],
-                "超量": [8388609, 8388641],
-                "灵摆": [16777233, 16777249, 16777313, 16777761, 16781329, 16781345, 16785441, 18874401, 25165857, 50331681],
-                "连接": [67108865, 67108897],
-                "特殊召唤": [33554465, 33554977, 33558561, 37748769],
-                "调整": [4113, 4129, 4161, 5153, 2101281],
-                "灵魂": [545, 673, 33554977],
-                "同盟": [1057, 5153],
-                "二重": [2081],
-                "卡通": [4194337, 37748769],
-                "反转": [2101281, 18874401]
+                typeCodes: [], // 大类没有具体的类型代码
+                children: {
+                    "通常": {
+                        typeCodes: [17],
+                        children: {}
+                    },
+                    "效果": {
+                        typeCodes: [33],
+                        children: {
+                            "融合": {
+                                typeCodes: [97],
+                                children: {}
+                            },
+                            "仪式": {
+                                typeCodes: [161],
+                                children: {}
+                            },
+                            "灵魂": {
+                                typeCodes: [545],
+                                children: {}
+                            },
+                            "同盟": {
+                                typeCodes: [1057],
+                                children: {}
+                            },
+                            "二重": {
+                                typeCodes: [2081],
+                                children: {}
+                            },
+                            "调整": {
+                                typeCodes: [4129],
+                                children: {}
+                            },
+                            "同调": {
+                                typeCodes: [8225],
+                                children: {}
+                            },
+                            "超量": {
+                                typeCodes: [8388641],
+                                children: {}
+                            },
+                            "灵摆": {
+                                typeCodes: [16777249],
+                                children: {}
+                            },
+                            "卡通": {
+                                typeCodes: [4194337],
+                                children: {}
+                            },
+                            "反转": {
+                                typeCodes: [2101281],
+                                children: {}
+                            },
+                            "特殊召唤": {
+                                typeCodes: [33554465],
+                                children: {}
+                            }
+                        }
+                    },
+                    "融合": {
+                        typeCodes: [65],
+                        children: {}
+                    },
+                    "仪式": {
+                        typeCodes: [129],
+                        children: {}
+                    },
+                    "同调": {
+                        typeCodes: [8193],
+                        children: {}
+                    },
+                    "超量": {
+                        typeCodes: [8388609],
+                        children: {}
+                    },
+                    "灵摆": {
+                        typeCodes: [],
+                        children: {
+                            "通常": {
+                                typeCodes: [16777233],
+                                children: {}
+                            },
+                            "效果": {
+                                typeCodes: [16777249],
+                                children: {}
+                            }
+                        }
+                    },
+                    "连接": {
+                        typeCodes: [67108865],
+                        children: {}
+                    }
+                }
             },
             "魔法": {
-                "通常": [2],
-                "速攻": [65538],
-                "永续": [131074],
-                "装备": [262146],
-                "场地": [524290],
-                "仪式": [130]
+                typeCodes: [2],
+                children: {
+                    "通常": {
+                        typeCodes: [2],
+                        children: {}
+                    },
+                    "速攻": {
+                        typeCodes: [65538],
+                        children: {}
+                    },
+                    "永续": {
+                        typeCodes: [131074],
+                        children: {}
+                    },
+                    "装备": {
+                        typeCodes: [262146],
+                        children: {}
+                    },
+                    "场地": {
+                        typeCodes: [524290],
+                        children: {}
+                    },
+                    "仪式": {
+                        typeCodes: [130],
+                        children: {}
+                    }
+                }
             },
             "陷阱": {
-                "通常": [4],
-                "永续": [131076],
-                "反击": [1048580]
+                typeCodes: [4],
+                children: {
+                    "通常": {
+                        typeCodes: [4],
+                        children: {}
+                    },
+                    "永续": {
+                        typeCodes: [131076],
+                        children: {}
+                    },
+                    "反击": {
+                        typeCodes: [1048580],
+                        children: {}
+                    }
+                }
             }
         };
+
+        // 处理类型选项点击 - 修复版本
+        function handleTypeOptionClick(option) {
+            const typeName = option.dataset.type;
+            const level = parseInt(option.dataset.level);
+            
+            console.log('点击了类型选项:', typeName, '级别:', level);
+            
+            // 更新当前路径
+            currentTypePath = currentTypePath.slice(0, level);
+            currentTypePath.push(typeName);
+            
+            // 获取当前选择的类型节点
+            let currentNode = typeHierarchy;
+            
+            // 遍历当前路径，找到对应的节点
+            for (let i = 0; i < currentTypePath.length; i++) {
+                const pathPart = currentTypePath[i];
+                
+                // 第一级节点（怪兽、魔法、陷阱）
+                if (i === 0) {
+                    if (currentNode[pathPart]) {
+                        currentNode = currentNode[pathPart];
+                    } else {
+                        console.error('找不到第一级类型节点:', pathPart);
+                        return;
+                    }
+                } 
+                // 子级节点
+                else {
+                    if (currentNode.children && currentNode.children[pathPart]) {
+                        currentNode = currentNode.children[pathPart];
+                    } else {
+                        console.error('找不到子级类型节点:', pathPart);
+                        return;
+                    }
+                }
+            }
+            
+            // 清除之前的选择状态
+            document.querySelectorAll('.type-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 设置当前选项为选中状态
+            option.classList.add('selected');
+            
+            // 移除更高级别的选择器
+            const typeSelector = document.getElementById('type-selector');
+            const levels = typeSelector.querySelectorAll('.type-level');
+            for (let i = level + 1; i < levels.length; i++) {
+                typeSelector.removeChild(levels[i]);
+            }
+            
+            // 如果有子类别，创建下一级选择器
+            if (currentNode.children && Object.keys(currentNode.children).length > 0) {
+                const nextLevel = document.createElement('div');
+                nextLevel.className = 'type-level';
+                nextLevel.innerHTML = `<div class="type-level-title">选择子类:</div>`;
+                
+                for (const childType of Object.keys(currentNode.children)) {
+                    const childOption = document.createElement('div');
+                    childOption.className = 'type-option';
+                    childOption.textContent = childType;
+                    childOption.dataset.type = childType;
+                    childOption.dataset.level = level + 1;
+                    nextLevel.appendChild(childOption);
+                }
+                
+                typeSelector.appendChild(nextLevel);
+                
+                // 当有子类别但未选择具体子类时，收集该节点及其所有子节点的类型代码
+                selectedTypes = collectAllTypeCodes(currentNode);
+            } else {
+                // 如果没有子类别，则设置选中的类型代码
+                selectedTypes = currentNode.typeCodes || [];
+            }
+            
+            // 更新类型路径显示
+            updateSelectedTypePath();
+            
+            console.log('当前选择的类型代码:', selectedTypes);
+            console.log('当前选择的类型路径:', currentTypePath);
+        }
+
+        // 收集节点及其所有子节点的类型代码
+        function collectAllTypeCodes(node) {
+            let typeCodes = [];
+            
+            // 添加当前节点的类型代码
+            if (node.typeCodes && node.typeCodes.length > 0) {
+                typeCodes = typeCodes.concat(node.typeCodes);
+            }
+            
+            // 递归添加所有子节点的类型代码
+            if (node.children) {
+                for (const childType of Object.keys(node.children)) {
+                    const childNode = node.children[childType];
+                    typeCodes = typeCodes.concat(collectAllTypeCodes(childNode));
+                }
+            }
+            
+            // 去重
+            return [...new Set(typeCodes)];
+        }
+
+
         
         // 初始化函数
         function init() {
@@ -821,6 +1053,7 @@
                     cardsData = data;
                     populateFilterOptions();
                     setupEventListeners();
+                    initTypeSelector();
                 })
                 .catch(error => {
                     console.error('加载卡片数据失败:', error);
@@ -910,7 +1143,60 @@
                     };
                     populateFilterOptions();
                     setupEventListeners();
+                    initTypeSelector();
                 });
+        }
+        
+        // 初始化类型选择器
+        function initTypeSelector() {
+            const typeSelector = document.getElementById('type-selector');
+            typeSelector.innerHTML = '';
+            
+            // 创建第一级选择器（怪兽、魔法、陷阱）
+            const firstLevel = document.createElement('div');
+            firstLevel.className = 'type-level';
+            firstLevel.innerHTML = '<div class="type-level-title">选择大类:</div>';
+            
+            for (const mainType of Object.keys(typeHierarchy)) {
+                const option = document.createElement('div');
+                option.className = 'type-option';
+                option.textContent = mainType;
+                option.dataset.type = mainType;
+                option.dataset.level = '0';
+                firstLevel.appendChild(option);
+            }
+            
+            typeSelector.appendChild(firstLevel);
+            
+            // 添加重置按钮
+            const resetButton = document.createElement('button');
+            resetButton.className = 'btn btn-warning btn-small';
+            resetButton.textContent = '重置类型选择';
+            resetButton.addEventListener('click', resetTypeSelection);
+            typeSelector.appendChild(resetButton);
+            
+            // 初始化当前状态
+            currentTypePath = [];
+            selectedTypes = [];
+            updateSelectedTypePath();
+        }
+        
+        // 重置类型选择
+        function resetTypeSelection() {
+            currentTypePath = [];
+            selectedTypes = [];
+            initTypeSelector();
+            updateSelectedTypePath();
+        }
+        
+        // 更新选择的类型路径显示
+        function updateSelectedTypePath() {
+            const pathElement = document.getElementById('selected-type-path');
+            if (currentTypePath.length === 0) {
+                pathElement.textContent = '未选择类型';
+            } else {
+                pathElement.textContent = '当前选择: ' + currentTypePath.join(' > ');
+            }
         }
         
         // 填充筛选选项
@@ -933,44 +1219,6 @@
                 option.dataset.value = key;
                 option.textContent = value;
                 attributeOptions.appendChild(option);
-            }
-            
-            // 卡片类型选项 - 使用新的分类结构
-            const typeOptions = document.getElementById('type-options');
-            
-            // 创建大类选项
-            for (const [mainType, subTypes] of Object.entries(typeCategories)) {
-                const mainCategory = document.createElement('div');
-                mainCategory.className = 'type-category';
-                
-                const mainTitle = document.createElement('div');
-                mainTitle.className = 'type-category-title';
-                mainTitle.textContent = mainType;
-                mainCategory.appendChild(mainTitle);
-                
-                // 为每个子类型创建选项
-                for (const [subType, typeCodes] of Object.entries(subTypes)) {
-                    const subCategory = document.createElement('div');
-                    subCategory.className = 'type-subcategory';
-                    
-                    const subTitle = document.createElement('div');
-                    subTitle.className = 'type-subcategory-title';
-                    subTitle.textContent = subType;
-                    subCategory.appendChild(subTitle);
-                    
-                    // 创建子类型选项
-                    const option = document.createElement('div');
-                    option.className = 'filter-option';
-                    option.dataset.mainType = mainType;
-                    option.dataset.subType = subType;
-                    option.dataset.typeCodes = typeCodes.join(',');
-                    option.textContent = `${mainType} - ${subType}`;
-                    subCategory.appendChild(option);
-                    
-                    mainCategory.appendChild(subCategory);
-                }
-                
-                typeOptions.appendChild(mainCategory);
             }
             
             // 等级选项
@@ -1006,7 +1254,7 @@
             });
             
             // 筛选选项选择 - 种族、属性、等级
-            document.querySelectorAll('.filter-option:not([data-type-codes])').forEach(option => {
+            document.querySelectorAll('#race-options .filter-option, #attribute-options .filter-option, #level-options .filter-option').forEach(option => {
                 option.addEventListener('click', function() {
                     this.classList.toggle('selected');
                     
@@ -1035,21 +1283,13 @@
                 });
             });
             
-            // 卡片类型选项选择 - 特殊处理
-            document.querySelectorAll('.filter-option[data-type-codes]').forEach(option => {
-                option.addEventListener('click', function() {
-                    this.classList.toggle('selected');
-                    
-                    const typeCodes = this.dataset.typeCodes.split(',').map(code => parseInt(code));
-                    
-                    if (this.classList.contains('selected')) {
-                        // 添加选中的类型代码
-                        selectedTypes = [...new Set([...selectedTypes, ...typeCodes])];
-                    } else {
-                        // 移除选中的类型代码
-                        selectedTypes = selectedTypes.filter(code => !typeCodes.includes(code));
-                    }
-                });
+            // 类型选择器事件委托 - 修复版本
+            document.getElementById('type-selector').addEventListener('click', function(e) {
+                // 使用 closest 方法找到点击的 type-option 元素
+                const typeOption = e.target.closest('.type-option');
+                if (typeOption && !typeOption.classList.contains('disabled')) {
+                    handleTypeOptionClick(typeOption);
+                }
             });
             
             // 攻击力/守备力输入框事件
@@ -1131,11 +1371,77 @@
             // 外部链接按钮
             document.getElementById('external-link-btn').addEventListener('click', function() {
                 if (currentCard) {
-                    const ygocdbUrl = `https://ygocdb.com/card/ ${currentCard.id}`;
+                    const ygocdbUrl = `https://ygocdb.com/card/${currentCard.id}`;
                     window.open(ygocdbUrl, '_blank');
                 }
             });
         }
+        
+        // 处理类型选项点击 - 修复版本
+        // function handleTypeOptionClick(option) {
+        //     const typeName = option.dataset.type;
+        //     const level = parseInt(option.dataset.level);
+            
+        //     // 更新当前路径
+        //     currentTypePath = currentTypePath.slice(0, level);
+        //     currentTypePath.push(typeName);
+            
+        //     // 获取当前选择的类型节点
+        //     let currentNode = typeHierarchy;
+        //     for (const pathPart of currentTypePath) {
+        //         // 检查当前节点是否有这个路径部分
+        //         if (currentNode[pathPart]) {
+        //             currentNode = currentNode[pathPart];
+        //         } else {
+        //             console.error('找不到类型节点:', pathPart);
+        //             return;
+        //         }
+        //     }
+            
+        //     // 清除之前的选择状态
+        //     document.querySelectorAll('.type-option').forEach(opt => {
+        //         opt.classList.remove('selected');
+        //     });
+            
+        //     // 设置当前选项为选中状态
+        //     option.classList.add('selected');
+            
+        //     // 移除更高级别的选择器
+        //     const typeSelector = document.getElementById('type-selector');
+        //     const levels = typeSelector.querySelectorAll('.type-level');
+        //     for (let i = level + 1; i < levels.length; i++) {
+        //         typeSelector.removeChild(levels[i]);
+        //     }
+            
+        //     // 如果有子类别，创建下一级选择器
+        //     if (currentNode.children && Object.keys(currentNode.children).length > 0) {
+        //         const nextLevel = document.createElement('div');
+        //         nextLevel.className = 'type-level';
+        //         nextLevel.innerHTML = `<div class="type-level-title">选择子类:</div>`;
+                
+        //         for (const childType of Object.keys(currentNode.children)) {
+        //             const childOption = document.createElement('div');
+        //             childOption.className = 'type-option';
+        //             childOption.textContent = childType;
+        //             childOption.dataset.type = childType;
+        //             childOption.dataset.level = level + 1;
+        //             nextLevel.appendChild(childOption);
+        //         }
+                
+        //         typeSelector.appendChild(nextLevel);
+                
+        //         // 设置选中的类型为空，因为还没有选择最终类型
+        //         selectedTypes = [];
+        //     } else {
+        //         // 如果没有子类别，则设置选中的类型代码
+        //         selectedTypes = currentNode.typeCodes;
+        //     }
+            
+        //     // 更新类型路径显示
+        //     updateSelectedTypePath();
+            
+        //     console.log('当前选择的类型代码:', selectedTypes);
+        // }
         
         // 执行搜索
         function performSearch() {
@@ -1181,41 +1487,9 @@
                     return false;
                 }
                 
-                // 检查卡片类型筛选条件 - 优化后的逻辑
-                if (selectedTypes.length > 0) {
-                    let typeMatch = false;
-                    
-                    // 检查卡片类型是否匹配任何选中的类型代码
-                    for (const typeCode of selectedTypes) {
-                        if (card.data.type === typeCode) {
-                            typeMatch = true;
-                            break;
-                        }
-                        
-                        // 对于包含关系，检查类型代码是否包含在卡片类型中
-                        // 例如：如果选择了"怪兽|效果"，那么"怪兽|效果|灵摆"也应该匹配
-                        const selectedTypeString = typeMap[typeCode];
-                        const cardTypeString = typeMap[card.data.type];
-                        
-                        if (selectedTypeString && cardTypeString) {
-                            const selectedParts = selectedTypeString.split('|');
-                            const cardParts = cardTypeString.split('|');
-                            
-                            // 检查卡片类型是否包含所有选中的类型部分
-                            const hasAllParts = selectedParts.every(part => 
-                                cardParts.includes(part)
-                            );
-                            
-                            if (hasAllParts) {
-                                typeMatch = true;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (!typeMatch) {
-                        return false;
-                    }
+                // 检查卡片类型筛选条件 - 精确匹配选择的类型代码
+                if (selectedTypes.length > 0 && !selectedTypes.includes(card.data.type)) {
+                    return false;
                 }
                 
                 // 检查等级筛选条件
@@ -1416,39 +1690,9 @@
                     return false;
                 }
                 
-                if (selectedTypes.length > 0) {
-                    let typeMatch = false;
-                    
-                    // 检查卡片类型是否匹配任何选中的类型代码
-                    for (const typeCode of selectedTypes) {
-                        if (card.data.type === typeCode) {
-                            typeMatch = true;
-                            break;
-                        }
-                        
-                        // 对于包含关系，检查类型代码是否包含在卡片类型中
-                        const selectedTypeString = typeMap[typeCode];
-                        const cardTypeString = typeMap[card.data.type];
-                        
-                        if (selectedTypeString && cardTypeString) {
-                            const selectedParts = selectedTypeString.split('|');
-                            const cardParts = cardTypeString.split('|');
-                            
-                            // 检查卡片类型是否包含所有选中的类型部分
-                            const hasAllParts = selectedParts.every(part => 
-                                cardParts.includes(part)
-                            );
-                            
-                            if (hasAllParts) {
-                                typeMatch = true;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (!typeMatch) {
-                        return false;
-                    }
+                // 检查卡片类型筛选条件 - 精确匹配选择的类型代码
+                if (selectedTypes.length > 0 && !selectedTypes.includes(card.data.type)) {
+                    return false;
                 }
                 
                 // 检查等级筛选条件
@@ -1671,18 +1915,8 @@
                 const cardElement = document.createElement('div');
                 cardElement.className = 'fuzzy-card-item';
                 
-                // 改进：显示更直观的相关度信息
-                let relevanceText = '';
-                // if (card.relevance >= 50) {
-                //     relevanceText = '高度相关';
-                // } else if (card.relevance >= 20) {
-                //     relevanceText = '相关';
-                // } else {
-                //     relevanceText = '低相关';
-                // }
-                
                 cardElement.innerHTML = `
-                    <a href="https://ygocdb.com/card/ ${card.id}" class="external-link" target="_blank" title="在YGOCDB中查看">🔗</a>
+                    <a href="https://ygocdb.com/card/${card.id}" class="external-link" target="_blank" title="在YGOCDB中查看">🔗</a>
                     <div class="card-name">${card.cn_name}</div>
                     <div class="card-type">${card.text.types.split('\n')[0]}</div>
                 `;
@@ -1722,7 +1956,7 @@
                 const cardElement = document.createElement('div');
                 cardElement.className = 'card-item';
                 cardElement.innerHTML = `
-                    <a href="https://ygocdb.com/card/ ${card.id}" class="external-link" target="_blank" title="在YGOCDB中查看">🔗</a>
+                    <a href="https://ygocdb.com/card/${card.id}" class="external-link" target="_blank" title="在YGOCDB中查看">🔗</a>
                     <div class="card-name">${card.cn_name}</div>
                     <div class="card-type">${card.text.types.split('\n')[0]}</div>
                 `;
@@ -1945,5 +2179,4 @@
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
-
 </html>
