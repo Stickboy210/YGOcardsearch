@@ -1673,16 +1673,15 @@
                 
                 // 改进：显示更直观的相关度信息
                 let relevanceText = '';
-                if (card.relevance >= 50) {
-                    relevanceText = '高度相关';
-                } else if (card.relevance >= 20) {
-                    relevanceText = '相关';
-                } else {
-                    relevanceText = '低相关';
-                }
+                // if (card.relevance >= 50) {
+                //     relevanceText = '高度相关';
+                // } else if (card.relevance >= 20) {
+                //     relevanceText = '相关';
+                // } else {
+                //     relevanceText = '低相关';
+                // }
                 
                 cardElement.innerHTML = `
-                    <div class="fuzzy-relevance">${relevanceText} (${card.relevance}分)</div>
                     <a href="https://ygocdb.com/card/ ${card.id}" class="external-link" target="_blank" title="在YGOCDB中查看">🔗</a>
                     <div class="card-name">${card.cn_name}</div>
                     <div class="card-type">${card.text.types.split('\n')[0]}</div>
@@ -1946,4 +1945,5 @@
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
+
 </html>
