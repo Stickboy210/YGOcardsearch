@@ -1,0 +1,27 @@
+name: Update cards.json from ygocdb
+
+on:
+  schedule:
+    # 每 10 天跑一次（UTC 00:00）
+    - cron: '0 0 */10 * *'
+  workflow_dispatch: # 手动按钮，随时点一次立即更新
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download and unzip cards.zip
+        run: |
+          curl -L -o cards.zip https://ygocdb.com/api/v0/cards.zip
+          unzip -o cards.zip
+          # 解压后得到 cards.json，直接位于根目录
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cards.json
+          git diff --cached --quiet || (git commit -m "Auto-update cards.json" && git push)
